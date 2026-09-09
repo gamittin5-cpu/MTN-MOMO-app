@@ -1,0 +1,13 @@
+{
+  "name": "loan-application-portal",
+  "version": "1.0.0",
+  "description": "MTN MoMo Zambia Loan Application & Multi-Admin Telegram Bot Portal",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-telegram-bot-api": "^0.65.1"
+  }
+}
