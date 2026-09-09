@@ -1,0 +1,408 @@
+/**
+ * **MTN MOMO ZAMBIA - STYLESHEET**
+ * Place this file inside public/style.css
+ */
+
+:root {
+  --primary-color: #FFCC00; /* MTN Yellow */
+  --primary-dark: #E6B800;
+  --text-color: #111111;
+  --bg-color: #F4F5F7;
+  --white: #FFFFFF;
+  --gray-light: #E0E0E0;
+  --gray-text: #666666;
+  --error-color: #FF3B30;
+  --success-color: #34C759;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.bank-header {
+  background-color: var(--text-color);
+  color: var(--primary-color);
+  padding: 15px 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-container {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bank-badge {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.bank-badge.sm {
+  padding: 4px 8px;
+  font-size: 0.85rem;
+}
+
+.bank-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.card {
+  background-color: var(--white);
+  width: 100%;
+  max-width: 480px;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card.hidden {
+  display: none !important;
+}
+
+.card.center-card {
+  text-align: center;
+  align-items: center;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.subtitle {
+  color: var(--gray-text);
+  font-size: 0.9rem;
+  margin-top: -10px;
+}
+
+.calc-box {
+  background-color: #FAFAFC;
+  border: 1px solid var(--gray-light);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label, .field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-text);
+}
+
+.input-group input[type="text"], .field input, .field select, .field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--gray-light);
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-group input:focus, .field input:focus, .field select:focus, .field textarea:focus {
+  border-color: var(--text-color);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--text-color);
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--gray-text);
+}
+
+.monthly-display {
+  background: var(--text-color);
+  color: var(--primary-color);
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.monthly-display span {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.monthly-display h3 {
+  font-size: 1.5rem;
+  margin-top: 4px;
+  color: var(--primary-color);
+}
+
+.primary-btn {
+  background-color: var(--primary-color);
+  color: var(--text-color);
+  font-weight: 700;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+  width: 100%;
+  text-align: center;
+}
+
+.primary-btn:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  background-color: var(--gray-light);
+  color: var(--text-color);
+  font-weight: 600;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  flex: 1;
+}
+
+.features-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  border-top: 1px solid var(--gray-light);
+  padding-top: 15px;
+}
+
+.feature-item {
+  font-size: 0.75rem;
+  color: var(--gray-text);
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  flex: 1;
+}
+
+.feature-item strong {
+  color: var(--text-color);
+  margin-bottom: 2px;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#step-indicator {
+  font-size: 0.85rem;
+  color: var(--gray-text);
+  font-weight: 600;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background-color: var(--gray-light);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+#progress-fill {
+  height: 100%;
+  background-color: var(--text-color);
+  transition: width 0.3s ease;
+}
+
+.form-step {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-step.hidden {
+  display: none;
+}
+
+.row-fields {
+  display: flex;
+  gap: 10px;
+}
+
+.row-fields .field {
+  flex: 1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--gray-text);
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.summary-box {
+  background-color: #FAFAFC;
+  border: 1px solid var(--gray-light);
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.summary-box h3 {
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid var(--gray-light);
+  border-top-color: var(--text-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 10px auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.status-box {
+  background-color: #FFF9E6;
+  border: 1px solid #FFE066;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #856404;
+  width: 100%;
+}
+
+.pin-inputs, .otp-inputs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.pin-box, .otp-box {
+  width: 45px;
+  height: 50px;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border: 2px solid var(--gray-light);
+  border-radius: 8px;
+  outline: none;
+}
+
+.pin-box:focus, .otp-box:focus {
+  border-color: var(--text-color);
+}
+
+.error-text {
+  color: var(--error-color);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.success-icon {
+  width: 64px;
+  height: 64px;
+  background-color: var(--success-color);
+  color: var(--white);
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.approved-amount-box {
+  background-color: #E8F5E9;
+  border: 1px solid #C8E6C9;
+  padding: 15px;
+  border-radius: 8px;
+  width: 100%;
+  text-align: center;
+}
+
+.approved-amount-box span {
+  font-size: 0.75rem;
+  color: #2E7D32;
+  font-weight: 600;
+}
+
+.approved-amount-box h3 {
+  font-size: 1.5rem;
+  color: #1B5E20;
+  margin-top: 4px;
+}
+
+.bank-footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.8rem;
+  color: var(--gray-text);
+  border-top: 1px solid var(--gray-light);
+}
